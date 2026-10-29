@@ -1,13 +1,338 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-  </head>
-  <body>
-  <a href="第1章_AIと日本語_practice_quiz.html" >1장퀴즈</a>
-  <a href="chapter05-table.html" >테이블 실습</a>
-  <a href="chapter05.html">멀티미디어 실습</a>
-  </body>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>비즈니스일본어 PBL 수업 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&family=Noto+Sans+KR:wght@400;600&family=Noto+Serif+KR&display=swap" rel="stylesheet">
+<script src="d3.min.js"></script>
+<style>:root {
+  --font-anthropic-sans: "Noto Sans KR", "Noto Sans JP", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-anthropic-serif: "Noto Serif KR", "Noto Serif JP", Georgia, serif;
+  --color-fg: #1f1e1d; --color-fg-muted: #6b6a66; --color-bg: #faf9f5; --color-panel: #ffffff; --color-border-line: #e5e3dc;
+  --color-ok: #2f7d4f; --color-warn: #a86b00; --color-bad: #c0392b;
+  --cds-chart-grid: #efede6; --cds-surface-popover: #ffffff; --cds-border: #dcdad2; --cds-text-secondary: #6b6a66;
+  --cds-shadow-popover: 0 4px 16px rgba(0,0,0,.12);
+  --cds-radius: 8px; --cds-dur-slow: 300ms;
+  --cds-font-size-caption: .8125rem; --cds-font-size-body: .9375rem; --cds-font-size-heading: 1.0625rem; --cds-font-size-title: 1.75rem;
+  --cds-font-weight-medium: 600;
+  --cds-gap-xs: .25rem; --cds-gap-sm: .5rem; --cds-gap-md: .875rem; --cds-gap-lg: 1.25rem; --cds-gap-xl: 1.75rem;
+  --cds-pad-xs: .25rem; --cds-pad-sm: .5rem; --cds-pad-lg: 1.25rem;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --color-fg: #ecebe6; --color-fg-muted: #a3a29c; --color-bg: #1c1b19; --color-panel: #262523; --color-border-line: #3a3936;
+  --cds-chart-grid: #33322f; --cds-surface-popover: #2c2b28; --cds-border: #45443f; --cds-text-secondary: #a3a29c;
+} }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); }
+.wrap { max-width: 72rem; margin-inline: auto; padding: 2rem 16px 3rem; }
+.dash-skeleton:empty { min-height: 1.4em; }
+footer.src { margin-top: 2rem; font-size: .8125rem; color: var(--color-fg-muted); }
+
+.pb { font-family: var(--font-anthropic-sans); display: grid; gap: var(--cds-gap-xl); }
+.pb-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-xs); }
+.pb-head p { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); max-width: 60rem; }
+.pb-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--cds-gap-md); }
+.pb-tile, .pb-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+.pb-tile .lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+.pb-tile .num { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; margin: var(--cds-gap-xs) 0 0; min-height: 1.4em; }
+.pb-tile .note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-xs) 0 0; }
+.pb h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.pb .sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-md); }
+.pb-gantt { position: relative; min-height: 220px; }
+.pb-gantt svg text { font-family: var(--font-anthropic-sans); }
+.pb-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); max-width: 16rem; z-index: 2; }
+.pb-tip .k { color: var(--cds-text-secondary); }
+.pb-weeks { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); margin-bottom: var(--cds-gap-md); min-height: 2.2rem; }
+.pb-weeks button { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-radius: var(--cds-radius); border: 1px solid var(--color-border-line); background: var(--color-bg); color: var(--color-fg); cursor: pointer; }
+.pb-weeks button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+.pb-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-lg); }
+.pb-detail dl { margin: 0; display: grid; gap: var(--cds-gap-md); }
+.pb-detail dt { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pb-detail dd { margin: var(--cds-gap-xs) 0 0; font-size: var(--cds-font-size-body); line-height: 1.6; }
+.pb-wtitle { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-heading); margin: 0; }
+.pb-wja { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: var(--cds-gap-xs) 0 var(--cds-gap-md); }
+.pb-expr { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cds-gap-sm); }
+.pb-expr li { border-left: 3px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-sm); }
+.pb-expr .ja { font-size: var(--cds-font-size-body); }
+.pb-expr .ko { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pb-tablebox { overflow: auto; max-height: 32rem; }
+.pb table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); }
+.pb th, .pb td { text-align: left; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+.pb th { position: sticky; top: 0; background: var(--color-panel); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); }
+.pb td.wk { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pb tbody tr { cursor: pointer; }
+@media (max-width: 40rem) { .pb .hide-narrow { display: none; } }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.pb-fail { display: flex; align-items: center; justify-content: center; gap: var(--cds-gap-xs); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); min-height: inherit; }
+.pb-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+
+<div class="pb">
+  <header class="pb-head" id="top">
+    <h1>비즈니스일본어 PBL 수업 대시보드</h1>
+    <p>교재 『인공지능과 비즈니스일본어』 7~13장을 9~15주차에 한 장씩 배치했어요. 일본어 기획서로 시작해 AI 도구 실습과 앱 설계를 거쳐, 번역 앱과 관광상품 기획서로 마무리합니다.</p>
+  </header>
+
+  <section class="pb-tiles" aria-label="요약">
+    <div class="pb-tile">
+      <p class="lbl">수업 주차</p>
+      <p class="num dash-skeleton" data-draw="k-weeks" data-source="summary" data-field="weeks">—</p>
+      <p class="note">9~15주차, 주당 1개 장</p>
+    </div>
+    <div class="pb-tile">
+      <p class="lbl">교재 분량(쪽)</p>
+      <p class="num dash-skeleton" data-draw="k-pages" data-source="summary" data-field="pages">—</p>
+      <p class="note">7~13장 본문 기준</p>
+    </div>
+    <div class="pb-tile">
+      <p class="lbl">활용 도구</p>
+      <p class="num dash-skeleton" data-draw="k-tools" data-source="summary" data-field="tools">—</p>
+      <p class="note">생성형 AI, 챗봇, TTS, 디자인, 앱 개발</p>
+    </div>
+    <div class="pb-tile">
+      <p class="lbl">팀 산출물</p>
+      <p class="num dash-skeleton" data-draw="k-deliv" data-source="summary" data-field="deliverables">—</p>
+      <p class="note">기획서, 챗봇, 음성, 프로토타입, 앱 등</p>
+    </div>
+  </section>
+
+  <section class="pb-card" id="timeline">
+    <h2>PBL 프로젝트 진행 타임라인</h2>
+    <p class="sub">네 단계가 주차별로 이어져요. 막대에 마우스를 올리면 과제와 산출물이 보이고, 주차를 누르면 아래 수업계획이 바뀝니다.</p>
+    <div class="pb-gantt dash-skeleton" data-draw="gantt" data-source="pbl weeks"></div>
+  </section>
+
+  <section class="pb-card" id="plan">
+    <h2>주차별 수업계획</h2>
+    <p class="sub">주차를 고르면 학습 목표, PBL 활동, 도구, 산출물, 핵심 일본어 표현을 볼 수 있어요.</p>
+    <div class="pb-weeks" data-draw="weekpick" data-source="weeks" role="group" aria-label="주차 선택"></div>
+    <div class="pb-detail">
+      <div>
+        <p class="pb-wtitle" data-draw="d-title" data-source="weeks" data-field="title_ko">—</p>
+        <p class="pb-wja" data-draw="d-ja" data-source="weeks" data-field="title_ja">—</p>
+        <dl>
+          <div><dt>학습 목표</dt><dd data-draw="d-goals" data-source="weeks" data-field="goals">—</dd></div>
+          <div><dt>PBL 활동</dt><dd data-draw="d-act" data-source="weeks" data-field="pbl_activity">—</dd></div>
+          <div><dt>활용 도구</dt><dd data-draw="d-tools" data-source="weeks" data-field="tools">—</dd></div>
+          <div><dt>산출물</dt><dd data-draw="d-deliv" data-source="weeks" data-field="deliverable">—</dd></div>
+        </dl>
+      </div>
+      <div>
+        <h2>핵심 일본어 표현</h2>
+        <p class="sub">교재 예문과 참고 표현에서 골랐어요.</p>
+        <ul class="pb-expr" data-draw="d-expr" data-source="expressions"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="pb-card" id="table">
+    <h2>전체 주차 계획표</h2>
+    <p class="sub">행을 누르면 위 수업계획에서 그 주차가 열려요.</p>
+    <div class="pb-tablebox">
+      <table data-source="weeks" data-row-key="week">
+        <thead>
+          <tr>
+            <th data-field="week">주차</th>
+            <th data-field="chapter">장</th>
+            <th data-field="title_ko">단원</th>
+            <th data-field="stage">PBL 단계</th>
+            <th data-field="tools" class="hide-narrow">도구</th>
+            <th data-field="deliverable" class="hide-narrow">산출물</th>
+          </tr>
+        </thead>
+        <tbody data-draw="tbl"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+
+<footer class="src">출처: 강연화·염희균·강신심, 『인공지능과 비즈니스일본어』 제7~13장 내용을 바탕으로 정리한 수업계획입니다.</footer>
+</div>
+<script>
+const DATA = {"weeks": [{"week": 9, "chapter": 7, "title_ja": "日本語を活かしたプロジェクト企画と発表", "title_ko": "일본어를 활용한 프로젝트 기획과 발표", "page_start": 79, "page_end": 89, "stage": "기획", "goals": "관광상품·번역 서비스·지역 홍보 분야의 실무형 프로젝트 주제를 구체화하고, 일본어 기획서와 프레젠테이션을 팀별로 완성한다.", "pbl_activity": "팀 구성 → 7항목 기획서(タイトル·目的/背景·対象·内容·方法·宣伝方法·効果/まとめ) 작성 → 팀별 기획안 발표와 質疑応答", "tools": "PPT, 포스터", "deliverable": "프로젝트 기획서 + 발표 자료"}, {"week": 10, "chapter": 8, "title_ja": "AI活用プロジェクト実習の準備", "title_ko": "AI 활용 프로젝트 실습 준비", "page_start": 90, "page_end": 99, "stage": "AI 도구 실습", "goals": "생성형 AI의 원리·한계(환각, 윤리)를 이해하고, AI 초안을 비즈니스 일본어로 비판적으로 수정(Critical Editing)한다.", "pbl_activity": "AI로 인턴십 일정 변경 메일 초안 → 경어·구조 수정 → 동료 리뷰 / 일본 소비자 대상 설문 작성·분석 / Genspark 제품 소개 PPT", "tools": "ChatGPT, Claude, Genspark", "deliverable": "수정한 비즈니스 메일 + 소비자 설문지 + 제품 소개 PPT"}, {"week": 11, "chapter": 9, "title_ja": "AIチャットボットと観光案内・商品説明書の作成", "title_ko": "AI 챗봇과 관광 안내 상품 설명서 만들기", "page_start": 100, "page_end": 115, "stage": "AI 도구 실습", "goals": "노코드 도구로 일본어 상담 챗봇을 만들고, 소스 기반 AI로 관광상품 소개 롤플레이 대본을 일본어로 완성한다.", "pbl_activity": "Chatling 상담 챗봇(Builder·Knowledge base·AI Response) 제작 → NotebookLM으로 관광 롤플레이 대본(挨拶·紹介·特徴·締めくくり) 작성 후 일본어 변환", "tools": "Chatling, NotebookLM", "deliverable": "상담 챗봇 공유 링크 + 일본어 관광 안내 대본"}, {"week": 12, "chapter": 10, "title_ja": "AI基盤TTSサービス", "title_ko": "AI 기반 TTS 서비스 살펴보기", "page_start": 116, "page_end": 120, "stage": "AI 도구 실습", "goals": "TTS의 원리와 활용을 이해하고, AI 음성으로 일본어 관광 안내·프레젠테이션 음성을 제작한다.", "pbl_activity": "수퍼톤 플레이에서 프로젝트 생성 → 보이스 선택 → 11주차 대본으로 일본어 안내 음성 생성·다운로드 → 일본어 모의 발표", "tools": "Supertone Play", "deliverable": "일본어 관광 안내 음성 파일"}, {"week": 13, "chapter": 11, "title_ja": "日本語翻訳・観光アプリのプロトタイプ", "title_ko": "일본어 번역/관광 앱 프로토타입", "page_start": 121, "page_end": 135, "stage": "설계", "goals": "UI/UX 5원칙(사용성·일관성·접근성·피드백·효율성)을 이해하고 Figma로 한↔일 번역 앱 프로토타입을 만든다.", "pbl_activity": "Figma AI 프롬프트로 한일 양방향 음성 번역기 생성 → 휴대폰에서 공유 링크 테스트 → 템플릿 기반 디자인 수정", "tools": "Figma", "deliverable": "번역 앱 프로토타입 링크"}, {"week": 14, "chapter": 12, "title_ja": "日本語実務とAI技術プロジェクトⅠ", "title_ko": "일본어 실무와 AI 기술 프로젝트 Ⅰ", "page_start": 136, "page_end": 151, "stage": "설계", "goals": "브레인스토밍으로 주제를 정하고, 필요한 기능을 정의해 세부 설계 스토리보드를 작성한다.", "pbl_activity": "FigJam·EdrawMind 마인드맵 → 아이디어 회의 6문항(사용자·번역 방향·입력 방식 등) → MVP 정의(음성 입력·번역·결과 표시·읽기·지우기) → 화면 스토리보드", "tools": "FigJam, EdrawMind, Figma", "deliverable": "마인드맵 + 기능 정의서 + 화면 스토리보드"}, {"week": 15, "chapter": 13, "title_ja": "日本語実務とAI技術プロジェクトⅡ", "title_ko": "일본어 실무와 AI 기술 프로젝트 Ⅱ", "page_start": 152, "page_end": 174, "stage": "구현·발표", "goals": "번역 앱을 구현해 일본어 번역 정확도를 검증하고, 일본어 관광상품 기획서와 AI 서비스용 안내 문구를 완성한다.", "pbl_activity": "MIT App Inventor로 번역기 앱 구현·라이브 테스트 → Figma.ai·Gamma로 관광상품 기획서(タイトル~注意事項) 작성 → AI 서비스 응답·오류 안내 문구 설계 → 최종 발표", "tools": "MIT App Inventor, Figma, Gamma", "deliverable": "번역기 앱 + 일본어 관광상품 기획서 + 최종 발표"}], "expressions": [{"id": "e01", "week": 9, "ja": "～を目的として企画しました。", "ko": "~을 목적으로 기획했습니다."}, {"id": "e02", "week": 9, "ja": "～を対象としています。", "ko": "~을 대상으로 하고 있습니다."}, {"id": "e03", "week": 9, "ja": "～の効果が期待されます。", "ko": "~의 효과가 기대됩니다."}, {"id": "e04", "week": 9, "ja": "ご清聴ありがとうございました。ご質問がありましたら、お願いいたします。", "ko": "경청해 주셔서 감사합니다. 질문 있으시면 부탁드립니다."}, {"id": "e05", "week": 10, "ja": "お世話になっております。〇〇大学の〇〇と申します。", "ko": "신세 지고 있습니다. ○○대학의 ○○라고 합니다."}, {"id": "e06", "week": 10, "ja": "誠に恐縮ではございますが、日程変更についてご相談させていただきたく、ご連絡いたしました。", "ko": "대단히 송구하오나 일정 변경에 관해 상의드리고자 연락드렸습니다."}, {"id": "e07", "week": 10, "ja": "生成AIの利便性について、どの程度そう思いますか。", "ko": "생성형 AI의 편리성에 대해 어느 정도 그렇게 생각하십니까? (5단계 척도)"}, {"id": "e08", "week": 11, "ja": "ようこそお越しくださいました！", "ko": "어서 오십시오!"}, {"id": "e09", "week": 11, "ja": "伝統茶道体験はいかがでしょうか？", "ko": "전통 다도 체험은 어떠신가요?"}, {"id": "e10", "week": 11, "ja": "それでは、予約の手続きをお手伝いいたします。", "ko": "그럼 예약을 도와드리겠습니다."}, {"id": "e11", "week": 12, "ja": "この製品は当店で一番人気のハンドクリームです。", "ko": "이 제품은 저희 가게에서 가장 인기 있는 핸드크림입니다."}, {"id": "e12", "week": 13, "ja": "検索／翻訳／設定", "ko": "검색 / 번역 / 설정 (앱 UI 레이블)"}, {"id": "e13", "week": 15, "ja": "こんにちは。これを翻訳してください。", "ko": "안녕하세요. 이것을 번역해 주세요. (번역 테스트 문장)"}, {"id": "e14", "week": 15, "ja": "ご確認のほど、よろしくお願い申し上げます。", "ko": "확인 부탁드립니다."}, {"id": "e15", "week": 15, "ja": "本ツアーは、地方文化を体験できる2泊3日のプログラムである。", "ko": "본 투어는 지역 문화를 체험할 수 있는 2박 3일 프로그램이다."}, {"id": "e16", "week": 15, "ja": "ただいま確認しております。少々お待ちくださいませ。", "ko": "현재 확인 중입니다. 잠시만 기다려 주십시오."}, {"id": "e17", "week": 15, "ja": "正しく入力されていません。もう一度お試しください。", "ko": "정확히 입력되지 않았습니다. 다시 한번 시도해 주세요."}], "pbl": [{"step": 1, "stage": "기획", "start_week": 9, "end_week": 9, "task": "팀 구성, 주제 선정, 일본어 기획서 작성·발표", "deliverable": "프로젝트 기획서, 발표 자료"}, {"step": 2, "stage": "AI 도구 실습", "start_week": 10, "end_week": 12, "task": "생성형 AI 메일·설문 → 상담 챗봇·관광 대본 → TTS 음성", "deliverable": "메일·설문지, 챗봇, 대본, 음성 파일"}, {"step": 3, "stage": "설계", "start_week": 13, "end_week": 14, "task": "Figma 프로토타입, 마인드맵, 기능 정의, 스토리보드", "deliverable": "프로토타입, 기능 정의서, 스토리보드"}, {"step": 4, "stage": "구현·발표", "start_week": 15, "end_week": 15, "task": "앱인벤터 번역기 구현, 관광상품 기획서, 최종 발표", "deliverable": "번역기 앱, 관광상품 기획서, 최종 발표"}]};
+const dash = (() => {
+  const calcs = {}, draws = {};
+  const get = (id) => calcs[id] ? calcs[id].inputs.length && (calcs[id].val ??= calcs[id].fn(...calcs[id].inputs.map((i) => get(i)))) : DATA[id];
+  const run = (name) => document.querySelectorAll(`[data-draw="${name}"]`).forEach((el) => draws[name](el));
+  let raf = 0;
+  window.addEventListener('resize', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => Object.keys(draws).forEach(run)); });
+  return {
+    colors: ['#2a78d6', '#d65a31', '#2f9e6b', '#8a5bd6', '#c9a227', '#d6457a', '#3aa6b9', '#7a7a7a'],
+    data: (id) => { const d = get(id); return d ? {status: 'ok', data: d} : {status: 'missing', data: []}; },
+    calc: (id, o) => { calcs[id] = o; },
+    draw: (name, fn) => { if (fn) { draws[name] = fn; if (document.readyState !== 'loading') run(name); else document.addEventListener('DOMContentLoaded', () => run(name)); } else if (draws[name]) run(name); },
+    setLink: (id) => history.replaceState(null, '', '#' + id),
+  };
+})();
+
+
+dash.calc('summary', {
+  inputs: ['weeks'],
+  title: '수업 요약 수치',
+  description: '주차 수, 교재 쪽수 합계, 서로 다른 도구 수, 산출물 수(＋로 구분)를 셉니다.',
+  fn: (weeks) => {
+    const tools = new Set();
+    let pages = 0, deliverables = 0;
+    for (const w of weeks) {
+      String(w.tools).split(',').map((s) => s.trim()).filter(Boolean).forEach((t) => tools.add(t));
+      pages += Number(w.page_end) - Number(w.page_start) + 1;
+      deliverables += String(w.deliverable).split('+').map((s) => s.trim()).filter(Boolean).length;
+    }
+    return [{weeks: weeks.length, pages, tools: tools.size, deliverables}];
+  }
+});
+
+window.pbSel = window.pbSel || 9;
+const pbFmt = d3.format(',');
+const pbDetail = ['d-title', 'd-ja', 'd-goals', 'd-act', 'd-tools', 'd-deliv', 'd-expr', 'weekpick', 'gantt', 'tbl'];
+window.pbSelect = (wk) => { window.pbSel = Number(wk); pbDetail.forEach((n) => dash.draw(n)); };
+
+const pbFail = (el) => { el.replaceChildren(); const s = document.createElement('span'); s.className = 'pb-fail'; s.textContent = 'Failed to load'; el.append(s); };
+
+// headline numbers
+[['k-weeks', 'weeks'], ['k-pages', 'pages'], ['k-tools', 'tools'], ['k-deliv', 'deliverables']].forEach(([name, field]) => {
+  dash.draw(name, (el) => {
+    const s = dash.data('summary');
+    if (s.status !== 'ok' || !s.data.length) { el.textContent = '—'; return; }
+    el.classList.remove('dash-skeleton');
+    el.textContent = pbFmt(s.data[0][field]);
+  });
+});
+
+// selected week fields
+const pbRow = () => { const d = dash.data('weeks'); return d.status === 'ok' ? d.data.find((r) => Number(r.week) === window.pbSel) : null; };
+[['d-title', 'title_ko'], ['d-ja', 'title_ja'], ['d-goals', 'goals'], ['d-act', 'pbl_activity'], ['d-tools', 'tools'], ['d-deliv', 'deliverable']].forEach(([name, field]) => {
+  dash.draw(name, (el) => {
+    el.dataset.where = 'week=' + window.pbSel;
+    const r = pbRow();
+    if (!r) { el.textContent = '—'; return; }
+    el.textContent = name === 'd-title' ? `${r.week}주차 · 제${r.chapter}장 ${r[field]}` : String(r[field]);
+  });
+});
+
+dash.draw('d-expr', (el) => {
+  const d = dash.data('expressions');
+  el.replaceChildren();
+  if (d.status === 'error') { pbFail(el); return; }
+  if (d.status !== 'ok') return;
+  const rows = d.data.filter((r) => Number(r.week) === window.pbSel);
+  if (!rows.length) {
+    const li = document.createElement('li');
+    li.className = 'ko';
+    li.textContent = '이 장은 도구·설계 실습 중심이라 따로 정리된 표현이 없어요.';
+    el.append(li);
+    return;
+  }
+  for (const r of rows) {
+    const li = document.createElement('li');
+    const ja = document.createElement('div'); ja.className = 'ja'; ja.lang = 'ja'; ja.textContent = r.ja;
+    const ko = document.createElement('div'); ko.className = 'ko'; ko.textContent = r.ko;
+    li.append(ja, ko);
+    el.append(li);
+  }
+});
+
+dash.draw('weekpick', (el) => {
+  const d = dash.data('weeks');
+  el.replaceChildren();
+  if (d.status === 'error') { pbFail(el); return; }
+  if (d.status !== 'ok') return;
+  for (const r of d.data) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = `${r.week}주차 · ${r.chapter}장`;
+    b.setAttribute('aria-pressed', String(Number(r.week) === window.pbSel));
+    b.onclick = () => window.pbSelect(r.week);
+    el.append(b);
+  }
+});
+
+dash.draw('tbl', (el) => {
+  const d = dash.data('weeks');
+  el.replaceChildren();
+  if (d.status !== 'ok') return;
+  for (const r of d.data) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = String(r.week);
+    if (Number(r.week) === window.pbSel) tr.style.background = 'var(--cds-chart-grid)';
+    const cells = [[`${r.week}주차`, 'wk'], [`${r.chapter}장`, 'wk'], [r.title_ko, ''], [r.stage, ''], [r.tools, 'hide-narrow'], [r.deliverable, 'hide-narrow']];
+    for (const [t, c] of cells) { const td = document.createElement('td'); td.textContent = t; if (c) td.className = c; tr.append(td); }
+    tr.onclick = () => { window.pbSelect(r.week); document.getElementById('plan')?.scrollIntoView({behavior: 'smooth', block: 'start'}); };
+    el.append(tr);
+  }
+});
+
+dash.draw('gantt', (el) => {
+  const p = dash.data('pbl'), w = dash.data('weeks');
+  el.replaceChildren();
+  if (p.status === 'error' || w.status === 'error') { el.classList.remove('dash-skeleton'); pbFail(el); return; }
+  if (p.status !== 'ok' || w.status !== 'ok') return;
+  el.classList.remove('dash-skeleton');
+  const stages = p.data.slice().sort((a, b) => Number(a.step) - Number(b.step));
+  const weeks = w.data.map((r) => Number(r.week)).sort((a, b) => a - b);
+  const width = Math.max(280, el.clientWidth);
+  const rowH = 40, top = 30, bottom = 8;
+  const height = top + stages.length * rowH + bottom;
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img').attr('aria-label', 'PBL 단계별 주차 타임라인');
+  // measure stage labels
+  const meas = svg.append('g').attr('font-size', 12);
+  let lw = 0;
+  stages.forEach((s) => { const t = meas.append('text').text(s.stage); lw = Math.max(lw, t.node().getComputedTextLength()); });
+  meas.remove();
+  const left = Math.ceil(lw) + 14, right = 6;
+  const x = d3.scaleBand(weeks, [left, width - right]).paddingInner(0.08);
+  const y = d3.scaleBand(stages.map((s) => s.stage), [top, top + stages.length * rowH]).padding(0.28);
+  // week columns (clickable)
+  const cols = svg.append('g');
+  cols.selectAll('rect').data(weeks).join('rect')
+    .attr('x', (d) => x(d)).attr('y', top - 4).attr('width', x.bandwidth()).attr('height', stages.length * rowH + 4)
+    .attr('rx', 4)
+    .attr('fill', (d) => d === window.pbSel ? 'var(--cds-chart-grid)' : 'transparent')
+    .style('cursor', 'pointer')
+    .on('click', (e, d) => window.pbSelect(d));
+  const narrow = x.bandwidth() < 44;
+  svg.append('g').selectAll('text').data(weeks).join('text')
+    .attr('x', (d) => x(d) + x.bandwidth() / 2).attr('y', 16).attr('text-anchor', 'middle')
+    .attr('font-size', 12).attr('fill', (d) => d === window.pbSel ? 'var(--color-fg)' : 'var(--color-fg-muted)')
+    .attr('font-weight', (d) => d === window.pbSel ? 600 : 400)
+    .style('cursor', 'pointer')
+    .text((d) => narrow ? String(d) : `${d}주`)
+    .on('click', (e, d) => window.pbSelect(d));
+  svg.append('g').selectAll('text').data(stages).join('text')
+    .attr('x', 0).attr('y', (s) => y(s.stage) + y.bandwidth() / 2).attr('dominant-baseline', 'middle')
+    .attr('font-size', 12).attr('fill', 'var(--color-fg)').text((s) => s.stage);
+  const tip = document.createElement('div');
+  tip.className = 'pb-tip'; tip.hidden = true;
+  el.append(tip);
+  svg.append('g').selectAll('rect').data(stages).join('rect')
+    .attr('x', (s) => x(Number(s.start_week)))
+    .attr('width', (s) => x(Number(s.end_week)) + x.bandwidth() - x(Number(s.start_week)))
+    .attr('y', (s) => y(s.stage)).attr('height', y.bandwidth()).attr('rx', 4)
+    .attr('fill', (s, i) => dash.colors[i % dash.colors.length])
+    .on('mousemove', (e, s) => {
+      tip.replaceChildren();
+      const a = document.createElement('div'); a.className = 'k'; a.textContent = `${s.stage} · ${s.start_week}~${s.end_week}주차`;
+      const b = document.createElement('div'); b.textContent = s.task;
+      const c = document.createElement('div'); c.className = 'k'; c.textContent = '산출물: ' + s.deliverable;
+      tip.append(a, b, c); tip.hidden = false;
+      const [mx, my] = d3.pointer(e, el);
+      const tw = tip.offsetWidth;
+      tip.style.left = Math.max(0, Math.min(mx + 12, el.clientWidth - tw)) + 'px';
+      tip.style.top = (my + 14) + 'px';
+    })
+    .on('mouseleave', () => { tip.hidden = true; });
+});
+
+const named = document.getElementById(location.hash.slice(1));
+if (named) { named.scrollIntoView(); dash.setLink(named.id); }
+</script>
+</body>
 </html>
-
-
