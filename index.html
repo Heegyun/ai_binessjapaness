@@ -57,6 +57,7 @@ footer.src { margin-top: 2rem; font-size: .8125rem; color: var(--color-fg-muted)
 .pb-expr li { border-left: 3px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-sm); }
 .pb-expr .ja { font-size: var(--cds-font-size-body); }
 .pb-expr .ko { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pb-drive { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
 .pb-tablebox { overflow: auto; max-height: 32rem; }
 .pb table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); }
 .pb th, .pb td { text-align: left; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
@@ -103,6 +104,14 @@ footer.src { margin-top: 2rem; font-size: .8125rem; color: var(--color-fg-muted)
     </div>
   </section>
 
+  <section class="pb-card" id="board" style="display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);align-items:center;justify-content:space-between;">
+    <div style="min-width:0;flex:1 1 18rem;">
+      <h2>PBL 자료 제출함</h2>
+      <p class="sub" style="margin:0;">팀 산출물은 Google Drive 제출함의 해당 주차 폴더에 올려요. 파일 이름은 「팀명_산출물명」으로 맞춰 주세요. 아래 주차별 수업계획에서 그 주차 폴더로 바로 갈 수도 있어요.</p>
+    </div>
+    <a href="https://drive.google.com/drive/folders/1omjen2ZQTylzxLxRK3dAKbh03CmgA193" target="_blank" rel="noopener" style="font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium);padding:var(--cds-pad-xs) var(--cds-pad-lg);border-radius:var(--cds-radius);background:var(--color-fg);color:var(--color-bg);text-decoration:none;white-space:nowrap;">제출함 열기 ↗</a>
+  </section>
+
   <section class="pb-card" id="timeline">
     <h2>PBL 프로젝트 진행 타임라인</h2>
     <p class="sub">네 단계가 주차별로 이어져요. 막대에 마우스를 올리면 과제와 산출물이 보이고, 주차를 누르면 아래 수업계획이 바뀝니다.</p>
@@ -122,6 +131,7 @@ footer.src { margin-top: 2rem; font-size: .8125rem; color: var(--color-fg-muted)
           <div><dt>PBL 활동</dt><dd data-draw="d-act" data-source="weeks" data-field="pbl_activity">—</dd></div>
           <div><dt>활용 도구</dt><dd data-draw="d-tools" data-source="weeks" data-field="tools">—</dd></div>
           <div><dt>산출물</dt><dd data-draw="d-deliv" data-source="weeks" data-field="deliverable">—</dd></div>
+          <div><dt>제출</dt><dd><a class="pb-drive" data-draw="d-drive" href="https://drive.google.com/drive/folders/1omjen2ZQTylzxLxRK3dAKbh03CmgA193" target="_blank" rel="noopener">—</a></dd></div>
         </dl>
       </div>
       <div>
@@ -173,7 +183,6 @@ const dash = (() => {
   };
 })();
 
-
 dash.calc('summary', {
   inputs: ['weeks'],
   title: '수업 요약 수치',
@@ -192,7 +201,7 @@ dash.calc('summary', {
 
 window.pbSel = window.pbSel || 9;
 const pbFmt = d3.format(',');
-const pbDetail = ['d-title', 'd-ja', 'd-goals', 'd-act', 'd-tools', 'd-deliv', 'd-expr', 'weekpick', 'gantt', 'tbl'];
+const pbDetail = ['d-drive', 'd-title', 'd-ja', 'd-goals', 'd-act', 'd-tools', 'd-deliv', 'd-expr', 'weekpick', 'gantt', 'tbl'];
 window.pbSelect = (wk) => { window.pbSel = Number(wk); pbDetail.forEach((n) => dash.draw(n)); };
 
 const pbFail = (el) => { el.replaceChildren(); const s = document.createElement('span'); s.className = 'pb-fail'; s.textContent = 'Failed to load'; el.append(s); };
@@ -216,6 +225,16 @@ const pbRow = () => { const d = dash.data('weeks'); return d.status === 'ok' ? d
     if (!r) { el.textContent = '—'; return; }
     el.textContent = name === 'd-title' ? `${r.week}주차 · 제${r.chapter}장 ${r[field]}` : String(r[field]);
   });
+});
+
+
+// Drive submission folder per week (fixed links the instructor set up)
+const PB_DRIVE_ROOT = 'https://drive.google.com/drive/folders/1omjen2ZQTylzxLxRK3dAKbh03CmgA193';
+const PB_DRIVE = {9: '164iMzhKjQ28JAGOvJcZVifJLS093_eWw', 10: '1akun9TwnNv6eEmySk9pDrM4xIwZDGpzz', 11: '1FWulsuK3qE1ZZFU75bG8uR_gZZCk1NZ9', 12: '1asL2ujnGGS7BiFIiLzYIvqcCzel18k_B', 13: '1mDeQQJlCkr33KfWBaTk5t9gHf3Zyci91', 14: '1xuyXgwee5IBIM5OMKa7iYMWpC3UsShvK', 15: '1WoWeamm1OxgqfAzyJDFLjIZs8Dp7ob8Y'};
+dash.draw('d-drive', (el) => {
+  const id = PB_DRIVE[window.pbSel];
+  el.href = id ? 'https://drive.google.com/drive/folders/' + id : PB_DRIVE_ROOT;
+  el.textContent = `${window.pbSel}주차 제출 폴더 열기 ↗`;
 });
 
 dash.draw('d-expr', (el) => {
